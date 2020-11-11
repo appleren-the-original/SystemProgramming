@@ -1,0 +1,4 @@
+nasm -f elf32 -g ngram.asm -o ngram.o
+gcc -c main.c -g -o main.o
+gcc ngram.o main.o -o ngram
+./ngram
