@@ -22,10 +22,7 @@ global n_gram
 n_gram:
 	push ebp
 	mov ebp, esp
-	
-	; clear variables
-	mov dword [intersections], 0
-	mov dword [i], 0
+	push ebx
 	
 	; Taking parameters to variables.
 	;###########################
@@ -77,6 +74,8 @@ n_gram:
 	
 	
 	
+	mov dword [intersections], 0
+	mov dword [i], 0
 FOR1:
 	mov ecx, dword [i]
 	cmp ecx, dword [lim1]
@@ -133,6 +132,7 @@ son:
 
 	
 	
+	pop ebx
 	pop ebp
 	ret
 
