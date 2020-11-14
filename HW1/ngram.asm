@@ -102,8 +102,7 @@ FOR2:
 FOR3:
 	mov ecx, dword [z]
 	cmp ecx, dword [n]
-	; if z == n then we have equal substrings so we should break this for to not get 
-	; more than one intersections for the same substring. mar, marmar should return 1.
+	; if z == n then we have equal substrings
 	je buldu 
 	
 	mov ecx, eax ; ecx = &st1[0]
