@@ -1,18 +1,23 @@
 segment .data
+; To use For loops
 i	dd 0
 j	dd 0
 z	dd 0
+;###
 intersections	dd 0
 union		dd 0
 segment .bss
+;For taking function Parameters.
 st_1		resd 1
 st_2		resd 1
 size1  	resd 1
 size2  	resd 1
 n 	  	resd 1
+;##########
+;For loops limit for st_1 and st_2
 lim1  	resd 1
 lim2 	resd 1
-
+;###########
 
 segment .text
 global n_gram
@@ -22,7 +27,7 @@ global n_gram
 n_gram:
 	push ebp
 	mov ebp, esp
-	push ebx
+	push ebx; ebx should not change
 	
 	; Taking parameters to variables.
 	;###########################
@@ -75,42 +80,48 @@ n_gram:
 	
 	
 	mov dword [intersections], 0
+;for (i = 0; i < lim1; i++ ); //lim1 = size1 - n + 1
 	mov dword [i], 0
 FOR1:
 	mov ecx, dword [i]
 	cmp ecx, dword [lim1]
-	je son
+	je son ; if i == lim1 return;
 	inc ecx
 	mov dword [i], ecx
+; for (j = 0; j < lim2; j++);
 	mov dword [j], 0
-	
 FOR2:
 	mov ecx, dword [j]
 	cmp ecx, dword [lim2]
-	je FOR1
+	je FOR1 ; if j == lim2 you should go upper for.
 	inc ecx
 	mov dword [j], ecx
+;for (z = 0; z < n; z++);
 	mov dword [z], 0
 	
 FOR3:
 	mov ecx, dword [z]
 	cmp ecx, dword [n]
-	je buldu
+	; if z == n then we have equal substrings so we should break this for to not get 
+	; more than one intersections for the same substring. mar, marmar should return 1.
+	je buldu 
 	
-	mov ecx, eax
-	add ecx, dword [i]
-	add ecx, dword [z]
-	sub ecx, 1
-	mov dl, byte [ecx]
+	mov ecx, eax ; ecx = &st1[0]
+	add ecx, dword [i] ; ecx = &st1[0 + i]
+	add ecx, dword [z] ; ecx = &st1[0 + i + z]
+	sub ecx, 1		 ; ecx = &st1[0 + i + z - 1] // -1 because I increased i before this.
+	mov dl, byte [ecx] ; dl = st1[i + z -1] // ecx has address but dl has real char.
 	
+	; Same Operation for st2 as above.
 	mov ecx, ebx
 	add ecx, dword [j]
 	add ecx, dword [z]
 	sub ecx, 1
 	mov dh, byte [ecx]
 	
+	; IF both char are equal you can continue to look.
 	cmp dl, dh
-	jne FOR2
+	jne FOR2 ; If they are not equal break this loop since there is no meaning to continue from there.
 don:
 	add dword [z], 1
 	jmp FOR3
