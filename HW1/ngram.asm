@@ -3,6 +3,7 @@ segment .data
 i	dd 0
 j	dd 0
 z	dd 0
+dummy dd 0
 ;###
 intersections	dd 0
 union		dd 0
@@ -79,8 +80,64 @@ n_gram:
 	
 	
 	
-	mov dword [intersections], 0
+; Finding Union
+	mov ecx, dword [size1]
+	add ecx, dword [size2]
+	sub ecx, dword [n]
+	sub ecx, dword [n]
+	add ecx, 2
+	mov dword [union], ecx
+	mov dword [i], 0
+aux2:
+	mov ecx, dword [lim2]
+	cmp ecx, dword [i]
+	je aux2_end
+	mov dword [j], 0
+union1:
+	mov ecx, dword [j]
+	cmp ecx, dword [i]
+	je st2_uniq
+	mov dword [z], 0
+union2:
+	mov ecx, dword [z]
+	cmp ecx, dword [n]
+	je st2_same_before
+	
+	mov ecx, ebx ; ecx = &st1[0]
+	add ecx, dword [i] ; ecx = &st1[0 + i]
+	add ecx, dword [z] ; ecx = &st1[0 + i + z]; ecx = &st1[0 + i + z - 1] // -1 because I increased i before this.
+	mov dl, byte [ecx] ; dl = st1[i + z -1] // ecx has address but dl has real char.
+	
+	; Same Operation but starting from index j.
+	mov ecx, ebx
+	add ecx, dword [j]
+	add ecx, dword [z]
+	mov dh, byte [ecx]
+	cmp dl, dh
+	je st2_ayni
+	jne st2_farkli
+st2_ayni:
+	add dword [z], 1
+	jmp union2
+st2_farkli:
+	add dword [j], 1
+	jmp union1
+	
+st2_same_before:
+	sub dword [union], 1
+	add dword [i], 1
+	jmp aux2
+
+st2_uniq:
+	add dword [i], 1
+	jmp aux2
+
+aux2_end:
+;
+
+	
 ;for (i = 0; i < lim1; i++ ); //lim1 = size1 - n + 1
+	mov dword [intersections], 0
 	mov dword [i], 0
 FOR1:
 	mov ecx, dword [i]
@@ -129,6 +186,7 @@ don:
 
 buldu:
 	add dword [intersections], 1
+	sub dword [union], 1
 	jmp FOR1
 
 
@@ -138,9 +196,7 @@ aux1:
 inter1:
 	mov ecx, dword [i]
 	cmp ecx, dword [j]
-	je uniq
-	
-
+	je uniq	
 	mov dword [z], 0
 inter2:
 	mov ecx, dword [z]
@@ -171,20 +227,14 @@ farkli:
 ; Then we have same substr before us so do not look for this index.
 same_before:
 	add dword [i], 1
+	sub dword [union], 1
 	jmp FOR1
 	
 
 son:
-	;mov ecx, dword [union]
-	;;sub ecx, dword [intersections]
-	;mov dword [union], ecx
-	
-	;mov eax, 100
-	;mul dword [intersections]
-	;div ecx
-	mov eax, dword [intersections]
-	
-	
+	mov eax, 100
+	mul dword [intersections]
+	div dword [union]
 	pop ebx
 	pop ebp
 	ret
