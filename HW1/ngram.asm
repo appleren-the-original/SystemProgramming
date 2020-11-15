@@ -47,13 +47,10 @@ n_gram:
 	mov dword [n], ecx
 	;#######################
 	
-	xor ecx, ecx
-	add ecx, 2
-	add ecx, dword [size1]
-	add ecx, dword [size2]
-	sub ecx, dword [n]
-	sub ecx, dword [n]
-	mov dword [union], ecx
+
+	
+	
+	
 	
 	mov ecx, dword [size1]
 	sub ecx, dword [n]
@@ -64,6 +61,9 @@ n_gram:
 	sub ecx, dword [n]
 	inc ecx
 	mov dword [lim2], ecx
+	
+	
+
 	
 	;mov eax, 4
 	;mov ebx, 1
@@ -86,8 +86,9 @@ FOR1:
 	mov ecx, dword [i]
 	cmp ecx, dword [lim1]
 	je son ; if i == lim1 return;
-	inc ecx
-	mov dword [i], ecx
+	jmp aux1
+uniq:
+	add dword [i], 1
 ; for (j = 0; j < lim2; j++);
 	mov dword [j], 0
 FOR2:
@@ -128,18 +129,60 @@ don:
 
 buldu:
 	add dword [intersections], 1
-	jmp FOR2
+	jmp FOR1
 
+
+; Look if there is same substr before me.
+aux1:
+	mov dword [j], 0
+inter1:
+	mov ecx, dword [i]
+	cmp ecx, dword [j]
+	je uniq
+	
+
+	mov dword [z], 0
+inter2:
+	mov ecx, dword [z]
+	cmp ecx, dword [n]
+	je same_before
+	
+	mov ecx, eax ; ecx = &st1[0]
+	add ecx, dword [i] ; ecx = &st1[0 + i]
+	add ecx, dword [z] ; ecx = &st1[0 + i + z]; ecx = &st1[0 + i + z - 1] // -1 because I increased i before this.
+	mov dl, byte [ecx] ; dl = st1[i + z -1] // ecx has address but dl has real char.
+	
+	; Same Operation but starting from index j.
+	mov ecx, eax
+	add ecx, dword [j]
+	add ecx, dword [z]
+	mov dh, byte [ecx]
+	cmp dl, dh
+	je ayni
+	jne farkli
+ayni:
+	add dword [z], 1
+	jmp inter2
+farkli:
+	add dword [j], 1
+	jmp inter1
+	
+
+; Then we have same substr before us so do not look for this index.
+same_before:
+	add dword [i], 1
+	jmp FOR1
+	
 
 son:
-	mov ecx, dword [union]
-	sub ecx, dword [intersections]
-	mov dword [union], ecx
+	;mov ecx, dword [union]
+	;;sub ecx, dword [intersections]
+	;mov dword [union], ecx
 	
-	mov eax, 100
-	mul dword [intersections]
-	div ecx
-
+	;mov eax, 100
+	;mul dword [intersections]
+	;div ecx
+	mov eax, dword [intersections]
 	
 	
 	pop ebx
