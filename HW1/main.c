@@ -8,7 +8,7 @@ int n_gram(char* str_1, int size_1, char* str_2, int size_2, int n);
 int main(){
 	int n, len=0, lens1, lens2;
 	char s1[100], s2[100], *line;
-	FILE* fp = fopen("input", "r");
+	FILE* fp = fopen("input_tab.txt", "r");
 	
 	if (fp == NULL){
 		printf("File cannot be opened.\n");
