@@ -117,9 +117,48 @@ void vault_cleanup_module(void) {
 }
 
 int vault_init_module(void) {
-    /*
-     ...
-    */
+    int result, i;
+    int err;
+    dev_t devno = 0;
+    struct vault_dev* dev;
+    
+    if (scull_major) {
+        devno = MKDEV(vault_major, vault_minor);
+        result = register_chrdev_region(devno, vault_nr_devs, "vault");
+    } else {
+        result = alloc_chrdev_region(&devno, vault_minor, vault_nr_devs, "scull");
+        vault_major = MAJOR(devno);
+    }
+    if (result < 0) {
+        printk(KERN_WARNING "vault: can't get major %d\n", vault_major);
+        return result;
+    }
+    
+    vault_devices = kmalloc(vault_nr_devs * sizeof(struct vault_dev), GFP_KERNEL);
+    if (!vault_devices) {
+        result = -ENOMEM;
+        goto fail;
+    }
+    // initialize content with 0 / NULL.
+    memset(vault_devices, 0, vault_nr_devs * sizeof(struct vault_dev));
+    
+    // Initialize each device
+    for(i=0; i<vault_nr_devs; i++){
+		dev = &vault_devices[i];
+        sema_init(&dev->sem, 1); // initialize semaphore value as 1
+        devno = MKDEV(vault_major, vault_minor + i); // minor values are sequential 
+        cdev_init(&dev->cdev, &vault_fops);
+        dev->cdev.owner = THIS_MODULE;
+        dev->cdev.ops = &vault_fops;
+        err = cdev_add(&dev->cdev, devno, 1);
+        if (err)
+            printk(KERN_NOTICE "Error %d adding vault%d", err, i);
+	}
+    return 0; // success
+
+  fail:
+    vault_cleanup_module();
+    return result;
 }
 
 
