@@ -37,6 +37,10 @@ int vault_major = VAULT_MAJOR;
 int vault_minor = 0;
 int vault_nr_devs = VAULT_NR_DEVS;
 
+module_param(vault_major, int, S_IRUGO);
+module_param(vault_minor, int, S_IRUGO);
+module_param(vault_nr_devs, int, S_IRUGO);
+
 
 
 struct vault_dev {
