@@ -14,7 +14,7 @@
 
 #include <asm/switch_to.h>		/* cli(), *_flags */
 #include <asm/uaccess.h>	/* copy_*_user */
-
+#include "encryption.h"
 
 #include <linux/version.h>  /* in order to check kernel version */
 
@@ -37,6 +37,10 @@ int vault_major = VAULT_MAJOR;
 int vault_minor = 0;
 int vault_nr_devs = VAULT_NR_DEVS;
 
+char* key = "abcd";
+int *key_array;
+
+
 module_param(vault_major, int, S_IRUGO);
 module_param(vault_minor, int, S_IRUGO);
 module_param(vault_nr_devs, int, S_IRUGO);
@@ -53,11 +57,29 @@ struct vault_dev {
 struct vault_dev* vault_devices;
 
 
+
+int vault_trim(struct vault_dev *dev) {
+    if(dev->data){
+        kfree(dev->data);
+    }
+    dev->data = NULL;
+    dev->size = 0;
+    return 0;
+}
+
 int vault_open(struct inode *inode, struct file *filp) {
     /*
 		...
     */
-    
+    struct vault_dev *dev;
+    dev = container_of(inode->i_cdev, struct vault_dev, cdev);
+    filp->private_data = dev;
+    if ((filp->f_flags & O_ACCMODE) == O_WRONLY) {
+        if (down_interruptible(&dev->sem))
+            return -ERESTARTSYS;
+        vault_trim(dev);
+        up(&dev->sem);
+    }
     return 0;
 }
 
@@ -69,6 +91,32 @@ ssize_t vault_read(struct file *filp, char __user *buf, size_t count, loff_t *f_
     /*
 		...
     */
+   struct vault_dev *dev = filp->private_data;
+   ssize_t retval = 0;
+   if(down_interruptible(&dev->sem))
+        return -ERESTARTSYS
+    
+    if (*f_pos >= dev->size)
+        goto out;
+    
+    if (*f_pos + count > dev->size)
+        count = dev->size - *f_pos;
+    
+    if (dev->data == NULL) 
+        goto out;
+    char* res;
+    dec(key_array, key, dev->data, &res);
+    if(copy_to_user(buf, res,count)){
+        retval = -EFAULT;
+        goto out;
+    }
+    *f_pos += count;
+    retval = count;
+out:
+    kfree(res);
+    up(&dev->sem);
+    return retval;
+
 }
 
 
@@ -76,6 +124,21 @@ ssize_t vault_write(struct file *filp, const char __user *buf, size_t count, lof
     /*
 		...
     */
+    struct vault_dev *dev = filp->private_data;
+    ssize_t retval = -ENOMEM;
+    char* write_;
+    write = kmalloc(count * sizeof(char), GFP_KERNEL);
+    if (copy_from_user(write_, buf, count)){
+        retval = -EFAULT;
+        goto out;
+    }
+    int pad = enc(key_array, key, write_, &dev->data);
+    *f_pos = *f_pos + pad + count;
+    retval = count + pad;
+out:
+    kfree(write_);
+    up(&dev->sem);
+    return retval;
 }
 
 
@@ -120,6 +183,7 @@ int vault_init_module(void) {
     int result, i;
     int err;
     dev_t devno = 0;
+    set_keyArray(&key_array, key);
     struct vault_dev* dev;
     
     if (scull_major) {
