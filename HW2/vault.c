@@ -91,10 +91,11 @@ ssize_t vault_read(struct file *filp, char __user *buf, size_t count, loff_t *f_
     /*
 		...
     */
+   char* res;
    struct vault_dev *dev = filp->private_data;
    ssize_t retval = 0;
    if(down_interruptible(&dev->sem))
-        return -ERESTARTSYS
+        return -ERESTARTSYS;
     
     if (*f_pos >= dev->size)
         goto out;
@@ -104,7 +105,8 @@ ssize_t vault_read(struct file *filp, char __user *buf, size_t count, loff_t *f_
     
     if (dev->data == NULL) 
         goto out;
-    char* res;
+        
+    
     dec(key_array, key, dev->data, &res);
     if(copy_to_user(buf, res,count)){
         retval = -EFAULT;
@@ -124,15 +126,15 @@ ssize_t vault_write(struct file *filp, const char __user *buf, size_t count, lof
     /*
 		...
     */
+    char* write_;
     struct vault_dev *dev = filp->private_data;
     ssize_t retval = -ENOMEM;
-    char* write_;
-    write = kmalloc(count * sizeof(char), GFP_KERNEL);
+    int pad = enc(key_array, key, write_, &dev->data);
+    write_ = kmalloc(count * sizeof(char), GFP_KERNEL);
     if (copy_from_user(write_, buf, count)){
         retval = -EFAULT;
         goto out;
     }
-    int pad = enc(key_array, key, write_, &dev->data);
     *f_pos = *f_pos + pad + count;
     retval = count + pad;
 out:
@@ -172,7 +174,7 @@ struct file_operations vault_fops = {
 
 
 void vault_cleanup_module(void) {
-    dev_t devno = MKDEV(vault_major, vault_minor);
+    //dev_t devno = MKDEV(vault_major, vault_minor);
 	
 	/*
 	 ...
@@ -182,11 +184,12 @@ void vault_cleanup_module(void) {
 int vault_init_module(void) {
     int result, i;
     int err;
-    dev_t devno = 0;
-    set_keyArray(&key_array, key);
     struct vault_dev* dev;
     
-    if (scull_major) {
+    dev_t devno = 0;
+    set_keyArray(&key_array, key);
+    
+    if (vault_major) {
         devno = MKDEV(vault_major, vault_minor);
         result = register_chrdev_region(devno, vault_nr_devs, "vault");
     } else {

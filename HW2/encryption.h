@@ -4,7 +4,8 @@
 
 int len(char* word) {
 	int res = 0;
-	for(int i = 0; word[i] != '\0'; i++) {
+	int i = 0;
+	for(i = 0; word[i] != '\0'; i++) {
 		res++;
 	}
 	return res;
@@ -12,17 +13,20 @@ int len(char* word) {
 
 void set_keyArray(int **key_array, char* key) {
 	int newl_ = len(key);
-	(*key_array) = kmalloc(newl_*sizeof(int), GFP_KERNEL);
-	memset(*key_array, 0, newl_*sizeof(int));
 	int alp_l = len(ALPHABET);
 	int index = 1;
-	for (int i = 0; i < alp_l; i++) {
-		for (int j = 0; j < newl_; j++) {
+	int i = 0;
+	for (i = 0; i < alp_l; i++) {
+		int j = 0;
+		for (j = 0; j < newl_; j++) {
 			if(ALPHABET[i] == key[j]) {
 				*(*key_array+j) = index++;
 			}
 		}
-	}	
+	}
+	(*key_array) = kmalloc(newl_*sizeof(int), GFP_KERNEL);
+	memset(*key_array, 0, newl_*sizeof(int));
+		
 }
 
 
@@ -31,15 +35,18 @@ int enc(int* key_array, char* key, char* word, char** res) {
 
 	int key_l = len(key);
 	int word_l = len(word);
+	
 
 	int pad_num = (key_l - word_l%key_l)%key_l;
 	// printf("%d word length \n", word_l);
 	// printf("%d pad_nun \n", pad_num);
-	(*res) = kmalloc((word_l + pad_num + 1)*sizeof(char), GFP_KERNEL);
+	
 
 	int times = (word_l + pad_num)/key_l;
-	for(int i = 0; i < times; i++){
-		for(int j = 0; j < key_l; j++) {
+	int i = 0;
+	for(i = 0; i < times; i++){
+		int j = 0;
+		for(j = 0; j < key_l; j++) {
 			char harf = 'x';
 			int ind = i*key_l + j;
 			int ind_res = i*key_l + key_array[j]-1;
@@ -53,6 +60,7 @@ int enc(int* key_array, char* key, char* word, char** res) {
 			
 		}
 	}
+	(*res) = kmalloc((word_l + pad_num + 1)*sizeof(char), GFP_KERNEL);
 	*(*res + (word_l + pad_num)) = '\0';
 
 	// printf("%d leng res\n", len((*res)));
@@ -61,17 +69,20 @@ int enc(int* key_array, char* key, char* word, char** res) {
 
 void dec(int* key_array, char* key, char* word, char** res){
 	int word_l = len(word);
-	(*res) = kmalloc((word_l+1)*sizeof(char), GFP_KERNEL);
+	
 	int key_l = len(key);
 	int times = word_l/key_l;
-
-	for(int i = 0; i < times; i++) {
-		for(int j = 0; j < key_l; j++){
+	int i = 0;
+	
+	for(i = 0; i < times; i++) {
+		int j = 0;
+		for(j = 0; j < key_l; j++){
 			int ind = i*key_l + j;
 			int ind_res = i*key_l + key_array[j] - 1;
 			*(*res+ind_res) = word[ind];
 		}
 	}
+	(*res) = kmalloc((word_l+1)*sizeof(char), GFP_KERNEL);
 	*(*res + word_l) = '\0';
 	
 	return ;
