@@ -38,7 +38,8 @@ int vault_minor = 0;
 int vault_nr_devs = VAULT_NR_DEVS;
 
 char* key = "abcd";
-int *key_array;
+int karray[4] = {1, 2, 3, 4};
+int *key_array = karray;
 
 
 module_param(vault_major, int, S_IRUGO);
@@ -129,12 +130,13 @@ ssize_t vault_write(struct file *filp, const char __user *buf, size_t count, lof
     char* write_;
     struct vault_dev *dev = filp->private_data;
     ssize_t retval = -ENOMEM;
-    int pad = enc(key_array, key, write_, &dev->data);
+    int pad;
     write_ = kmalloc(count * sizeof(char), GFP_KERNEL);
     if (copy_from_user(write_, buf, count)){
         retval = -EFAULT;
         goto out;
     }
+    pad = enc(key_array, key, write_, &dev->data);
     *f_pos = *f_pos + pad + count;
     retval = count + pad;
 out:
@@ -197,13 +199,13 @@ int vault_init_module(void) {
     struct vault_dev* dev;
     
     dev_t devno = 0;
-    set_keyArray(&key_array, key);
+    // set_keyArray(&key_array, key);
     
     if (vault_major) {
         devno = MKDEV(vault_major, vault_minor);
         result = register_chrdev_region(devno, vault_nr_devs, "vault");
     } else {
-        result = alloc_chrdev_region(&devno, vault_minor, vault_nr_devs, "scull");
+        result = alloc_chrdev_region(&devno, vault_minor, vault_nr_devs, "vault");
         vault_major = MAJOR(devno);
     }
     if (result < 0) {
