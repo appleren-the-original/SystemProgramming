@@ -179,6 +179,16 @@ void vault_cleanup_module(void) {
 	/*
 	 ...
 	*/
+    int i;
+    dev_t devno = MKDEV(vault_major, vault_minor);
+    if(vault_devices) {
+        for (i = 0; i < vault_nr_devs; i++) {
+            vault_trim(vault_devices+i);
+            cdev_del(&vault_devices[i].cdev);
+        }
+        kfree(vault_devices);
+    }
+    unregister_chrdev_region(devno, vault_nr_devs);
 }
 
 int vault_init_module(void) {
