@@ -74,7 +74,7 @@ void dec(int* key_array, char* key, char* word, char** res){
 	int key_l = len(key);
 	int times = word_l/key_l;
 	int i = 0;
-	
+	(*res) = kmalloc((word_l+1)*sizeof(char), GFP_KERNEL);
 	for(i = 0; i < times; i++) {
 		int j = 0;
 		for(j = 0; j < key_l; j++){
@@ -83,7 +83,7 @@ void dec(int* key_array, char* key, char* word, char** res){
 			*(*res+ind_res) = word[ind];
 		}
 	}
-	(*res) = kmalloc((word_l+1)*sizeof(char), GFP_KERNEL);
+	
 	*(*res + word_l) = '\0';
 	
 	return ;

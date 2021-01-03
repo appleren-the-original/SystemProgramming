@@ -90,7 +90,7 @@ int vault_release(struct inode *inode, struct file *filp) {
 
 ssize_t vault_read(struct file *filp, char __user *buf, size_t count, loff_t *f_pos) {
    
-	//char* res;
+	char* res;
 	struct vault_dev *dev = filp->private_data;
 	ssize_t retval = 0;
    
@@ -106,8 +106,8 @@ ssize_t vault_read(struct file *filp, char __user *buf, size_t count, loff_t *f_
     if (dev->data == NULL) 
         goto out;
         
-    //dec(key_array, key, dev->data, &res);
-    if(copy_to_user(buf, dev->data, count)){
+    dec(key_array, key, dev->data, &res);
+    if(copy_to_user(buf, res, count)){
 	//if(copy_to_user(buf, res, count)){
         retval = -EFAULT;
         goto out;
@@ -140,12 +140,12 @@ ssize_t vault_write(struct file *filp, const char __user *buf, size_t count, lof
         goto out;
     }
     //pad = enc(key_array, key, write_, &dev->data);
-    encrypt(key_array, len(key), write_, 1, &dev->data);
-    printk(KERN_ALERT  "write input: %s\n device content: %s\n", buf, dev->data);
+    //encrypt(key_array, len(key), write_, 1, &dev->data);
+    //printk(KERN_ALERT  "write input: %s\n device content: %s\n", buf, dev->data);
     pad = enc(key_array, key, write_, &dev->data);
     //*f_pos = *f_pos + pad + count;
     //retval = count + pad;
-    *f_pos = *f_pos + count;
+    *f_pos = *f_pos + count + pad;
     retval = count;
     
     // update size of the device
