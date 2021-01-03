@@ -37,8 +37,8 @@ int vault_major = VAULT_MAJOR;
 int vault_minor = 0;
 int vault_nr_devs = VAULT_NR_DEVS;
 
-char* key = "abcd";
-int karray[4] = {1, 2, 3, 4};
+char* key = "adcb";
+int karray[4] = {1, 4, 3, 2};
 int *key_array = karray;
 
 
@@ -139,13 +139,14 @@ ssize_t vault_write(struct file *filp, const char __user *buf, size_t count, lof
         retval = -EFAULT;
         goto out;
     }
-    pad = enc(key_array, key, write_, &dev->data);
-    printk(KERN_ALERT  "write input: %s\n device content: %s\n", buf, dev->data);
     //pad = enc(key_array, key, write_, &dev->data);
-    *f_pos = *f_pos + pad + count;
-    retval = count + pad;
-    //*f_pos = *f_pos + count;
-    //retval = count;
+    encrypt(key_array, len(key), write_, 1, &dev->data);
+    printk(KERN_ALERT  "write input: %s\n device content: %s\n", buf, dev->data);
+    pad = enc(key_array, key, write_, &dev->data);
+    //*f_pos = *f_pos + pad + count;
+    //retval = count + pad;
+    *f_pos = *f_pos + count;
+    retval = count;
     
     // update size of the device
     if (dev->size < *f_pos)

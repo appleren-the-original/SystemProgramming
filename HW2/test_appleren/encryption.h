@@ -162,61 +162,63 @@ void dec(int* key_array, char* key, char* word, char** res){
 //  * 				only used keys differ
 //  * @return 		resulting encrypted / decrypted string
 //  * */
-// char* encrypt(char* msg, int mode){
-// 	int len = strlen(msg);
-// 	int ncols = key_len; // previously set by setKeys function call
-// 	int nrows = len / ncols;
-// 	if (len % ncols != 0) nrows++;
-//
-//
-// 	// create a matrix for storing the message
-// 	char** matrix;
-// 	matrix = malloc(sizeof(char*) * nrows);
-// 	for(int i=0; i<nrows; i++)
-// 		matrix[i] = malloc(sizeof(char) * ncols);
-//
-// 	// build initial matrix with the message
-// 	for(int i=0; i<nrows; i++){
-// 		for(int j=0; j<ncols; j++){
-// 			if (i*ncols + j >= len)
-// 				matrix[i][j] = '0';
-// 			else
-// 				matrix[i][j] = msg[i*ncols + j];
-// 		}
-// 	}
-// 	// printmatrix(matrix, nrows, ncols); // DEBUG
-//
-// 	// create encrypted message using initial matrix and encryption key
-// 	char* msg_result = malloc(nrows * ncols);
-// 	if (mode){ // encryption
-// 		for(int i=0; i<nrows; i++){
-// 			for(int j=0; j<ncols; j++){
-// 				msg_result[i*ncols + j] = matrix[i][key_encrypt[j]];
-// 			}
-// 		}
-// 	}
-// 	else{ // decryption
-// 		int break_flag = 0;
-// 		for(int i=0; i<nrows; i++){
-// 			for(int j=0; j<ncols; j++){
-// 				if (matrix[i][key_decrypt[j]] == '0'){
-// 					break_flag = 1;
-// 					break;
-// 				}
-// 				msg_result[i*ncols + j] = matrix[i][key_decrypt[j]];
-// 			}
-// 			if (break_flag) break;
-// 		}
-// 	}
-//
-// 	// free the memory allocated for the matrix
-// 	for(int i=0; i<nrows; i++)
-// 		free(matrix[i]);
-// 	free(matrix);
-//
-//
-// 	return msg_result;
-// }
+ void encrypt(int* key_array, int key_len, char* msg, int mode, char** result){
+ 	int i, j;
+ 	char** matrix;
+ 	char* msg_result;
+ 	
+ 	int slen = len(msg);
+ 	int ncols = key_len; // previously set by setKeys function call
+ 	int nrows = slen / ncols;
+ 	if (slen % ncols != 0) nrows++;
+	
+ 	// create a matrix for storing the message
+ 	matrix = kmalloc(sizeof(char*) * nrows, GFP_KERNEL);
+ 	for(i=0; i<nrows; i++)
+ 		matrix[i] = kmalloc(sizeof(char) * ncols, GFP_KERNEL);
+
+ 	// build initial matrix with the message
+ 	for(i=0; i<nrows; i++){
+ 		for(j=0; j<ncols; j++){
+ 			if (i*ncols + j >= slen)
+ 				matrix[i][j] = '0';
+ 			else
+ 				matrix[i][j] = msg[i*ncols + j];
+ 		}
+ 	}
+ 	// printmatrix(matrix, nrows, ncols); // DEBUG
+
+ 	// create encrypted message using initial matrix and encryption key
+ 	msg_result = kmalloc(nrows * ncols, GFP_KERNEL);
+ 	if (mode){ // encryption
+ 		for(i=0; i<nrows; i++){
+ 			for(j=0; j<ncols; j++){
+ 				msg_result[i*ncols + j] = matrix[i][key_array[j]];
+ 			}
+ 		}
+ 	}
+ 	else{ // decryption
+ 		int break_flag = 0;
+ 		for(i=0; i<nrows; i++){
+ 			for(j=0; j<ncols; j++){
+ 				if (matrix[i][key_array[j]] == '0'){
+ 					break_flag = 1;
+ 					break;
+ 				}
+ 				msg_result[i*ncols + j] = matrix[i][key_array[j]];
+ 			}
+ 			if (break_flag) break;
+ 		}
+ 	}
+
+ 	// free the memory allocated for the matrix
+ 	for(i=0; i<nrows; i++)
+ 		kfree(matrix[i]);
+ 	kfree(matrix);
+
+	*result = msg_result;
+ 	return;
+}
 
 
 
