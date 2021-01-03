@@ -1,2 +1,2 @@
-/home/itucs/Desktop/HW2/vault.ko
-/home/itucs/Desktop/HW2/vault.o
+/home/appleren/Desktop/SystemProgramming/HW2/vault.ko
+/home/appleren/Desktop/SystemProgramming/HW2/vault.o

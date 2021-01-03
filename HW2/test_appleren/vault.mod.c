@@ -19,17 +19,17 @@ __used
 __attribute__((section("__versions"))) = {
 	{ 0xe00b4984, __VMLINUX_SYMBOL_STR(module_layout) },
 	{ 0xb6b46a7c, __VMLINUX_SYMBOL_STR(param_ops_int) },
-	{ 0x50eedeb8, __VMLINUX_SYMBOL_STR(printk) },
 	{ 0x29537c9e, __VMLINUX_SYMBOL_STR(alloc_chrdev_region) },
 	{ 0xdd353f7f, __VMLINUX_SYMBOL_STR(cdev_add) },
 	{ 0x64e48f86, __VMLINUX_SYMBOL_STR(cdev_init) },
 	{ 0xd8e484f0, __VMLINUX_SYMBOL_STR(register_chrdev_region) },
 	{ 0x7485e15e, __VMLINUX_SYMBOL_STR(unregister_chrdev_region) },
 	{ 0x5eae5d6b, __VMLINUX_SYMBOL_STR(cdev_del) },
-	{ 0x4f8b5ddb, __VMLINUX_SYMBOL_STR(_copy_to_user) },
+	{ 0x50eedeb8, __VMLINUX_SYMBOL_STR(printk) },
 	{ 0x4f6b400b, __VMLINUX_SYMBOL_STR(_copy_from_user) },
 	{ 0x2bc95bd4, __VMLINUX_SYMBOL_STR(memset) },
 	{ 0x12da5bb2, __VMLINUX_SYMBOL_STR(__kmalloc) },
+	{ 0x4f8b5ddb, __VMLINUX_SYMBOL_STR(_copy_to_user) },
 	{ 0xc4554217, __VMLINUX_SYMBOL_STR(up) },
 	{ 0x37a0cba, __VMLINUX_SYMBOL_STR(kfree) },
 	{ 0x4792c572, __VMLINUX_SYMBOL_STR(down_interruptible) },
@@ -42,4 +42,4 @@ __attribute__((section(".modinfo"))) =
 "depends=";
 
 
-MODULE_INFO(srcversion, "80EECBC7204B3E1CBE4EBEF");
+MODULE_INFO(srcversion, "CF0109C62170C35902383D2");
