@@ -1,0 +1,15 @@
+# setup
+make
+
+insmod vault.ko
+
+grep vault /proc/devices  # assume major number is 250:
+mknod /dev/vault0 c 250 0
+
+mknod /dev/vault1 c 250 1
+
+
+# test file:
+gcc vault_ioctl_test.c -o iotest
+
+./iotest
