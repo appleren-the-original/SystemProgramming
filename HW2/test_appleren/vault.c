@@ -54,6 +54,7 @@ module_param(vault_nr_devs, int, S_IRUGO);
 struct vault_dev {
     char* data;
     unsigned long size;
+    int status;
     struct semaphore sem;
     struct cdev cdev;
 };
@@ -66,6 +67,7 @@ int vault_trim(struct vault_dev *dev) {
     if(dev->data){
         kfree(dev->data);
     }
+    dev->status = -1;
     dev->data = NULL;
     dev->size = 0;
     return 0;
@@ -81,6 +83,10 @@ int vault_open(struct inode *inode, struct file *filp) {
     if ((filp->f_flags & O_ACCMODE) == O_WRONLY) {
         if (down_interruptible(&dev->sem))
             return -ERESTARTSYS;
+        if (dev->status == 1){
+            up(&dev->sem);
+            return -EPERM;
+        }
         vault_trim(dev);
         up(&dev->sem);
     }
@@ -99,7 +105,10 @@ ssize_t vault_read(struct file *filp, char __user *buf, size_t count, loff_t *f_
    
 	if(down_interruptible(&dev->sem))
         return -ERESTARTSYS;
-    
+    if (dev->status == -1) {
+        retval = -EPERM;
+        goto out;
+    }
     if (*f_pos >= dev->size)
         goto out;
     
@@ -115,6 +124,7 @@ ssize_t vault_read(struct file *filp, char __user *buf, size_t count, loff_t *f_
         retval = -EFAULT;
         goto out;
     }
+    dev->status = 0;
     *f_pos += count;
     retval = count;
 out:
@@ -136,8 +146,13 @@ ssize_t vault_write(struct file *filp, const char __user *buf, size_t count, lof
     if (down_interruptible(&dev->sem))
         return -ERESTARTSYS;
     
+    if (dev->status == 1) {
+        retval = -EPERM;
+        goto out;
+    }
     write_ = kmalloc(count, GFP_KERNEL);
     //dev->data = kmalloc(count, GFP_KERNEL);
+    
     if (copy_from_user(write_, buf, count)){
         retval = -EFAULT;
         goto out;
@@ -148,6 +163,7 @@ ssize_t vault_write(struct file *filp, const char __user *buf, size_t count, lof
     pad = enc(key_array, key, write_, &dev->data);
     //*f_pos = *f_pos + pad + count;
     //retval = count + pad;
+    dev->status = 1;
     *f_pos = *f_pos + count + pad;
     retval = count;
     
@@ -315,6 +331,7 @@ int vault_init_module(void) {
         dev->cdev.owner = THIS_MODULE;
         dev->cdev.ops = &vault_fops;
         err = cdev_add(&dev->cdev, devno, 1);
+        dev->status = -1;
         if (err)
             printk(KERN_NOTICE "Error %d adding vault%d", err, i);
 	}
