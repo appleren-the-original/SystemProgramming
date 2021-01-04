@@ -15,13 +15,14 @@
 
 int main(int argc, char* argv[]){
 	int fd;
+	int fd2;
 	int res;
 	char *input, *output;
 	char *ioctl_clear_test_string;
 	char *new_key;
 	int slen;
 	int length;
-	
+	fd2 = open("/dev/vault1", O_RDWR);
 	fd = open("/dev/vault0", O_RDWR);
 	if(fd < 0) {
 		printf("Cannot open device\n");
@@ -40,11 +41,13 @@ int main(int argc, char* argv[]){
 	input = malloc(length);
 	strcpy(input, "System Programming Project 2. This is a test file.");
 	slen = strlen(input);
+	res = pwrite(fd2, input, slen, 0);
 	res = pwrite(fd, input, slen, 0);
 	if (res == -1)
 		printf("Cannot write, Error code: %d (%s)\n", errno, strerror(errno));
 	else {
-		printf("characters written: %d\n", res);
+		printf("characters written to vault0: %d\n", res);
+		printf("characters written to vault1: %d\n", res);
 		printf("Written value:\t%s\n", input);
 	}
 	free(input); input = NULL;
@@ -61,7 +64,7 @@ int main(int argc, char* argv[]){
 	if (res == -1)
 		printf("Cannot read, Error code: %d (%s)\n", errno, strerror(errno));
 	else {
-		printf("characters read: %d\n", res);
+		printf("characters read: from vault0 %d\n", res);
 		printf("read value:\t%s\n", output);	
 	}
 	free(output); output = NULL;
@@ -74,7 +77,7 @@ int main(int argc, char* argv[]){
 	printf("\n########## CLEAR ##########\n");
 	ioctl_clear_test_string = malloc(length);
 	res = ioctl(fd, VAULT_IOC_CLEAR);
-	printf("Clear ioctl result: %d\n", res);
+	printf("Clear ioctl result (vault0): %d\n", res);
 	
 	
 	
@@ -101,29 +104,39 @@ int main(int argc, char* argv[]){
 	strcpy(new_key, "caeyf");
 	//new_key = "caeyf";
 	res = ioctl(fd, VAULT_IOC_SETKEY, new_key);
-	printf("SetKey ioctl result: %d\n", res);
+	printf("SetKey ioctl result (vault0): %d\n", res);
 	printf("New key is set to: %s\n", new_key);
 	free(new_key); new_key = NULL;
 	
 	printf("\n########## WRITE & READ with NEW KEY ##########\n");
 	input = malloc(length); memset(input, 0, length);
 	strcpy(input, "IOCTL SetKey test string.");
+	printf("##Looking If vault1 also decrypts with new key#\n");
+	output = malloc(length); memset(output, 0, length);
+	res = pread(fd2, output, length, 0);
+	if (res == -1)
+		printf("Cannot read, Error code: %d (%s)\n", errno, strerror(errno));
+	else {
+		printf("characters read (vault1): %d\n", res);
+		printf("read value:\t%s\n", output);	
+	}
+	memset(output, 0, length);
 	slen = strlen(input);
 	res = pwrite(fd, input, slen, 0);
 	if (res == -1)
 		printf("Cannot write, Error code: %d (%s)\n", errno, strerror(errno));
 	else {
-		printf("characters written: %d\n", res);
+		printf("characters written (vault0): %d\n", res);
 		printf("Written value:\t%s\n", input);
 	}
 	free(input); input = NULL;
 	
-	output = malloc(length); memset(output, 0, length);
+	
 	res = pread(fd, output, length, 0);
 	if (res == -1)
 		printf("Cannot read, Error code: %d (%s)\n", errno, strerror(errno));
 	else {
-		printf("characters read: %d\n", res);
+		printf("characters read (vault0): %d\n", res);
 		printf("read value:\t%s\n", output);	
 	}
 	free(output); output = NULL;
@@ -142,7 +155,7 @@ int main(int argc, char* argv[]){
 	if (res == -1)
 		printf("Cannot write, Error code: %d (%s)\n", errno, strerror(errno));
 	else {
-		printf("characters written: %d\n", res);
+		printf("characters written (vault0): %d\n", res);
 		printf("Written value:\t%s\n", input);
 	}
 	free(input); input = NULL;
@@ -159,12 +172,13 @@ int main(int argc, char* argv[]){
 	if (res == -1)
 		printf("Cannot read, Error code: %d (%s)\n", errno, strerror(errno));
 	else {
-		printf("characters read: %d\n", res);
+		printf("characters read (vault0): %d\n", res);
 		printf("read value:\t%s\n", output);	
 	}
 	free(output); output = NULL;
 	
-	
+	close(fd);
+	close(fd2);
 	printf("\n");
 	return 0;
 }
