@@ -27,6 +27,14 @@
 #endif
 
 
+#include <linux/ioctl.h> // _IO, _IOW
+
+#define VAULT_IOC_MAGIC 'k'
+#define VAULT_IOC_SETKEY _IOW(VAULT_IOC_MAGIC, 0, char*)
+#define VAULT_IOC_CLEAR _IO(VAULT_IOC_MAGIC, 1)
+#define VAULT_IOC_MAXNR 1
+
+
 
 #define VAULT_MAJOR 0
 #define VAULT_NR_DEVS 4
@@ -160,26 +168,82 @@ out:
 
 
 long vault_ioctl(struct file *filp, unsigned int cmd, unsigned long arg) {
-	/*
-	 ...
-	*/
+	
+	int err = 0;
+	int retval = 0;
+	struct vault_dev *dev = filp->private_data;
+
+	// check if the ioctl type & number is correct; if not, declare inappropriate ioctl
+	if (_IOC_TYPE(cmd) != VAULT_IOC_MAGIC) return -ENOTTY;
+	if (_IOC_NR(cmd) > VAULT_IOC_MAXNR) return -ENOTTY;
+
+	// check
+	if (_IOC_DIR(cmd) & _IOC_READ)
+        #if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 0, 0)
+            err = !access_ok((void __user *)arg, _IOC_SIZE(cmd));
+        #else
+            err = !access_ok(VERIFY_WRITE, (void __user *)arg, _IOC_SIZE(cmd));
+        #endif
+	else if (_IOC_DIR(cmd) & _IOC_WRITE)
+        #if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 0, 0)
+            err =  !access_ok((void __user *)arg, _IOC_SIZE(cmd));
+        #else
+            err =  !access_ok(VERIFY_READ, (void __user *)arg, _IOC_SIZE(cmd));
+        #endif
+	if (err) return -EFAULT;
+	
 	switch(cmd) {
-		case 0:
-			//...
+		case VAULT_IOC_SETKEY:
+			if (copy_from_user(key, (char*) arg, len((char*)arg))){
+				retval = -EFAULT;
+				goto out;
+			}
+			printk(KERN_INFO "key is set to: %s", key);
 			break;
-		case 1:
-			//...
+		case VAULT_IOC_CLEAR:
+			retval = vault_trim(dev);
 			break;
 	  
 		default:  /* redundant, as cmd was checked against MAXNR */
 			return -ENOTTY;
 	}
 
+out:
+	return retval;
+
+}
+
+loff_t vault_llseek(struct file *filp, loff_t off, int whence)
+{
+    struct vault_dev *dev = filp->private_data;
+    loff_t newpos;
+
+    switch(whence) {
+        case 0: /* SEEK_SET */
+            newpos = off;
+            break;
+
+        case 1: /* SEEK_CUR */
+            newpos = filp->f_pos + off;
+            break;
+
+        case 2: /* SEEK_END */
+            newpos = dev->size + off;
+            break;
+
+        default: /* can't happen */
+            return -EINVAL;
+    }
+    if (newpos < 0)
+        return -EINVAL;
+    filp->f_pos = newpos;
+    return newpos;
 }
 
 
 struct file_operations vault_fops = {
     .owner =    		THIS_MODULE,
+    .llseek = 			vault_llseek,
     .read =     		vault_read,
     .write =    		vault_write,
     .unlocked_ioctl =  	vault_ioctl,

@@ -1,0 +1,1 @@
+this file contains a very long string, including characters such as  !'+%&/()={[]}.
