@@ -25,7 +25,11 @@ int main(int argc, char* argv[]){
 	fd2 = open("/dev/vault1", O_RDWR);
 	fd = open("/dev/vault0", O_RDWR);
 	if(fd < 0) {
-		printf("Cannot open device\n");
+		printf("Cannot open device: /dev/vault0\n");
+		return -1;
+	}
+	if(fd2 < 0) {
+		printf("Cannot open device: /dev/vault1\n");
 		return -1;
 	}
 	
@@ -46,8 +50,8 @@ int main(int argc, char* argv[]){
 	if (res == -1)
 		printf("Cannot write, Error code: %d (%s)\n", errno, strerror(errno));
 	else {
-		printf("characters written to vault0: %d\n", res);
-		printf("characters written to vault1: %d\n", res);
+		printf("characters written (vault0): %d\n", res);
+		printf("characters written (vault1): %d\n", res);
 		printf("Written value:\t%s\n", input);
 	}
 	free(input); input = NULL;
@@ -64,7 +68,7 @@ int main(int argc, char* argv[]){
 	if (res == -1)
 		printf("Cannot read, Error code: %d (%s)\n", errno, strerror(errno));
 	else {
-		printf("characters read: from vault0 %d\n", res);
+		printf("characters read(vault0): %d\n", res);
 		printf("read value:\t%s\n", output);	
 	}
 	free(output); output = NULL;
