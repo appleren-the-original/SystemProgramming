@@ -215,7 +215,7 @@ long vault_ioctl(struct file *filp, unsigned int cmd, unsigned long arg) {
 			count = len(temp);
 			//count = 10;
 			printk("COUNT VALUE: %d\n", count); // prints correct value
-			key = kmalloc(count, GFP_KERNEL);
+			key = kmalloc(count+1, GFP_KERNEL);
             memset(key, 0, count);
             
 			for(i=0; i<count; i++)
@@ -224,6 +224,7 @@ long vault_ioctl(struct file *filp, unsigned int cmd, unsigned long arg) {
 			// 	retval = -EFAULT;
 			// 	goto out;
 			// }
+            key[count] = '\0';
 			set_keyArray(&key_array, key);
 			printk(KERN_INFO "key is set to: %s", key);
 			break;
