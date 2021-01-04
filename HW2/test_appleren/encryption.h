@@ -13,9 +13,12 @@ int len(char* word) {
 
 void set_keyArray(int **key_array, char* key) {
 	int newl_ = len(key);
+	
 	int alp_l = len(ALPHABET);
 	int index = 1;
 	int i = 0;
+	(*key_array) = kmalloc(newl_*sizeof(int), GFP_KERNEL);
+	memset(*key_array, 0, newl_*sizeof(int));
 	for (i = 0; i < alp_l; i++) {
 		int j = 0;
 		for (j = 0; j < newl_; j++) {
@@ -24,8 +27,7 @@ void set_keyArray(int **key_array, char* key) {
 			}
 		}
 	}
-	(*key_array) = kmalloc(newl_*sizeof(int), GFP_KERNEL);
-	memset(*key_array, 0, newl_*sizeof(int));
+	
 		
 }
 

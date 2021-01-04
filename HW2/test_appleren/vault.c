@@ -184,7 +184,7 @@ long vault_ioctl(struct file *filp, unsigned int cmd, unsigned long arg) {
 	int retval = 0;
 	char* temp;
 	int count;
-	//int i;
+	int i;
 	struct vault_dev *dev = filp->private_data;
 
 	// check if the ioctl type & number is correct; if not, declare inappropriate ioctl
@@ -215,16 +215,16 @@ long vault_ioctl(struct file *filp, unsigned int cmd, unsigned long arg) {
 			count = len(temp);
 			//count = 10;
 			printk("COUNT VALUE: %d\n", count); // prints correct value
-			kfree(key);
-			key = NULL;
 			key = kmalloc(count, GFP_KERNEL);
-			//for(i=0; i<count; i++, temp++)
-				//get_user(key[i], temp);
-			if (copy_from_user(key, temp, count)){
-				retval = -EFAULT;
-				goto out;
-			}
-			//set_keyArray(&key_array, key);
+            memset(key, 0, count);
+            
+			for(i=0; i<count; i++)
+				key[i] = *(temp + i);
+			// if (copy_from_user(key, temp, count)){
+			// 	retval = -EFAULT;
+			// 	goto out;
+			// }
+			set_keyArray(&key_array, key);
 			printk(KERN_INFO "key is set to: %s", key);
 			break;
 			
