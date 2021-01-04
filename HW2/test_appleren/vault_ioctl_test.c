@@ -43,8 +43,10 @@ int main(int argc, char* argv[]){
 	res = pwrite(fd, input, slen, 0);
 	if (res == -1)
 		printf("Cannot write, Error code: %d (%s)\n", errno, strerror(errno));
-	else 
+	else {
 		printf("characters written: %d\n", res);
+		printf("Written value:\t%s\n", input);
+	}
 	free(input); input = NULL;
 	
 	
@@ -60,7 +62,7 @@ int main(int argc, char* argv[]){
 		printf("Cannot read, Error code: %d (%s)\n", errno, strerror(errno));
 	else {
 		printf("characters read: %d\n", res);
-		printf("read value: %s\n", output);	
+		printf("read value:\t%s\n", output);	
 	}
 	free(output); output = NULL;
 	
@@ -74,6 +76,12 @@ int main(int argc, char* argv[]){
 	res = ioctl(fd, VAULT_IOC_CLEAR);
 	printf("Clear ioctl result: %d\n", res);
 	
+	
+	
+	/**
+	 * Read from empty device Test 
+	 */
+	printf("\n########## READ AFTER CLEAR ##########\n");
 	res = pread(fd, ioctl_clear_test_string, length, 0);
 	if (res == -1)
 		printf("Cannot read, Error code: %d (%s)\n", errno, strerror(errno));
@@ -86,33 +94,75 @@ int main(int argc, char* argv[]){
 	
 	
 	/**
-	 * IOCTL - Clear Test 
+	 * IOCTL - [SetKey -> Write -> Read] Test 
 	 */
 	printf("\n########## SETKEY ##########\n");
-	new_key = "caeyf";
+	new_key = malloc(5); memset(new_key, 0, 5);
+	strcpy(new_key, "caeyf");
+	//new_key = "caeyf";
 	res = ioctl(fd, VAULT_IOC_SETKEY, new_key);
 	printf("SetKey ioctl result: %d\n", res);
+	printf("New key is set to: %s\n", new_key);
+	free(new_key); new_key = NULL;
 	
-	input = malloc(length);
+	printf("\n########## WRITE & READ with NEW KEY ##########\n");
+	input = malloc(length); memset(input, 0, length);
 	strcpy(input, "IOCTL SetKey test string.");
 	slen = strlen(input);
 	res = pwrite(fd, input, slen, 0);
 	if (res == -1)
 		printf("Cannot write, Error code: %d (%s)\n", errno, strerror(errno));
-	else 
+	else {
 		printf("characters written: %d\n", res);
+		printf("Written value:\t%s\n", input);
+	}
 	free(input); input = NULL;
 	
-	output = malloc(length);
+	output = malloc(length); memset(output, 0, length);
 	res = pread(fd, output, length, 0);
 	if (res == -1)
 		printf("Cannot read, Error code: %d (%s)\n", errno, strerror(errno));
 	else {
 		printf("characters read: %d\n", res);
-		printf("read value: %s\n", output);	
+		printf("read value:\t%s\n", output);	
 	}
 	free(output); output = NULL;
 	
+	
+	
+	/**
+	 * IOCTL - [Write -> SetKey -> Read] Test 
+	 */
+	printf("\n########## WRITE -> SETKEY -> READ ##########\n");
+	
+	input = malloc(length); memset(input, 0, length);
+	strcpy(input, "IOCTL SetKey test string.");
+	slen = strlen(input);
+	res = pwrite(fd, input, slen, 0);
+	if (res == -1)
+		printf("Cannot write, Error code: %d (%s)\n", errno, strerror(errno));
+	else {
+		printf("characters written: %d\n", res);
+		printf("Written value:\t%s\n", input);
+	}
+	free(input); input = NULL;
+	
+	new_key = malloc(5); memset(new_key, 0, 5);
+	strcpy(new_key, "great");
+	res = ioctl(fd, VAULT_IOC_SETKEY, new_key);
+	printf("SetKey ioctl result: %d\n", res);
+	printf("New key is set to: %s\n", new_key);
+	free(new_key); new_key = NULL;
+	
+	output = malloc(length); memset(output, 0, length);
+	res = pread(fd, output, length, 0);
+	if (res == -1)
+		printf("Cannot read, Error code: %d (%s)\n", errno, strerror(errno));
+	else {
+		printf("characters read: %d\n", res);
+		printf("read value:\t%s\n", output);	
+	}
+	free(output); output = NULL;
 	
 	
 	printf("\n");
