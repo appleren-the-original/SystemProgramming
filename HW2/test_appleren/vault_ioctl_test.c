@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include <sys/stat.h>
@@ -6,18 +7,20 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 
+#include <errno.h>
 
-#define VAULT_IOC_MAGIC 'k'
-#define VAULT_IOC_SETKEY _IOW(VAULT_IOC_MAGIC, 0, char*)
-#define VAULT_IOC_CLEAR _IO(VAULT_IOC_MAGIC, 1)
-#define VAULT_IOC_MAXNR 1
+
+#include "vault_ioctl.h"
 
 
 int main(int argc, char* argv[]){
 	int fd;
 	int res;
-	char* str;
+	char *input, *output;
+	char *ioctl_clear_test_string;
+	char *new_key;
 	int slen;
+	int length;
 	
 	fd = open("/dev/vault0", O_RDWR);
 	if(fd < 0) {
@@ -25,18 +28,93 @@ int main(int argc, char* argv[]){
 		return -1;
 	}
 	
-	str = "alperen ahmet yusuf system programming.";
-	slen = strlen(str);
-	res = write(fd, str, slen);
-	printf("characters written: %d\n", res);
 	
-	str = "(if you see this, something is wrong.)";
+	length = 100;
+	
+	
+	
+	/**
+	 * Write Test 
+	 */
+	printf("\n########## WRITE ##########\n");
+	input = malloc(length);
+	strcpy(input, "System Programming Project 2. This is a test file.");
+	slen = strlen(input);
+	res = pwrite(fd, input, slen, 0);
+	if (res == -1)
+		printf("Cannot write, Error code: %d (%s)\n", errno, strerror(errno));
+	else 
+		printf("characters written: %d\n", res);
+	free(input); input = NULL;
+	
+	
+	
+	/**
+	 * Read Test 
+	 */
+	printf("\n########## READ ##########\n");
+	output = malloc(length);
 	//lseek(fd, 0, SEEK_SET);
-	//res = read(fd, str, slen);
-	res = pread(fd, str, slen, 0);
-	printf("characters read: %d\n", res);
-	printf("read value: %s\n", str);
+	res = pread(fd, output, length, 0);
+	if (res == -1)
+		printf("Cannot read, Error code: %d (%s)\n", errno, strerror(errno));
+	else {
+		printf("characters read: %d\n", res);
+		printf("read value: %s\n", output);	
+	}
+	free(output); output = NULL;
 	
 	
+	
+	/**
+	 * IOCTL - Clear Test 
+	 */
+	printf("\n########## CLEAR ##########\n");
+	ioctl_clear_test_string = malloc(length);
+	res = ioctl(fd, VAULT_IOC_CLEAR);
+	printf("Clear ioctl result: %d\n", res);
+	
+	res = pread(fd, ioctl_clear_test_string, length, 0);
+	if (res == -1)
+		printf("Cannot read, Error code: %d (%s)\n", errno, strerror(errno));
+	else {
+		printf("characters read: %d\n", res);
+		printf("read value: %s\n", ioctl_clear_test_string);	
+	}
+	free(ioctl_clear_test_string); ioctl_clear_test_string = NULL;
+	
+	
+	
+	/**
+	 * IOCTL - Clear Test 
+	 */
+	printf("\n########## SETKEY ##########\n");
+	new_key = "caeyf";
+	res = ioctl(fd, VAULT_IOC_SETKEY, new_key);
+	printf("SetKey ioctl result: %d\n", res);
+	
+	input = malloc(length);
+	strcpy(input, "IOCTL SetKey test string.");
+	slen = strlen(input);
+	res = pwrite(fd, input, slen, 0);
+	if (res == -1)
+		printf("Cannot write, Error code: %d (%s)\n", errno, strerror(errno));
+	else 
+		printf("characters written: %d\n", res);
+	free(input); input = NULL;
+	
+	output = malloc(length);
+	res = pread(fd, output, length, 0);
+	if (res == -1)
+		printf("Cannot read, Error code: %d (%s)\n", errno, strerror(errno));
+	else {
+		printf("characters read: %d\n", res);
+		printf("read value: %s\n", output);	
+	}
+	free(output); output = NULL;
+	
+	
+	
+	printf("\n");
 	return 0;
 }

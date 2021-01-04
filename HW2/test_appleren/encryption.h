@@ -156,6 +156,8 @@ void dec(int* key_array, char* key, char* word, char** res){
 // 	printf("\n");
 // }
 //
+
+
 // /**
 //  * @param msg	string to be encrypted
 //  * @param mode	boolean value, 1: encrypt & 0: decrypt
