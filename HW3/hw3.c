@@ -26,6 +26,34 @@ static const char *hello_str = "Hello World!\n";
 static const char *hello_path = "/hello/hello";
 static const char *hello_path_fol = "/hello";
 
+int pathfind(const char *path1, char *path2) {
+	//printf("pathfind fonk %s\n", path1);
+    int i1 = strlen(path1);
+
+    int i2 = strlen(path2);
+    if (i1 >= i2) return -1;
+    int i = 0;
+    int s = 0;
+    for (i = 0; i < i1; i++) {
+        if (path1[i] != path2[i]) return -1;
+    }
+    // printf("%s %s %c\n", path1,path2, path2[i1]);
+	
+    if(strcmp(path1, "/") != 0 && path2[i1] != '/') return -1; 
+    
+    for (i = i1; i < i2; i++) {
+        if (path2[i] == '/') s++;
+        if (s > 1) return -1;
+        
+        
+    }
+	if (strcmp(path1, "/") == 0) {
+		if (s >= 1) return -1;
+        return 1;
+    }
+    return i1+1;
+}
+
 void parse_array(cJSON *arrayItem)
 {
 	if(!arrayItem)
@@ -87,14 +115,18 @@ void parse_array(cJSON *arrayItem)
 	memset(path, '\0', sizeof(path));
 }
 
-void dfs(FILE *f,char *path, int off, int tabs, int virgul) {
+void dfs(FILE *f,const char *path, int off, int tabs, int virgul) {
+	
     int i = 0;
     int child_num = 0;
     int k = 0;
     int v = 0;
+	
     for (i = 0; i < curr_dir_idx; i++) {
+		
         if (pathfind(path, dir_list[i])!= -1) child_num++;
     }
+	
     //printf("%s %d\n", path, child_num);
     for (i = 0; i < tabs; i++) fprintf(f, "    ");
     if (strcmp(path, "/") == 0) fprintf(f,"{\n");
@@ -123,9 +155,9 @@ void dfs(FILE *f,char *path, int off, int tabs, int virgul) {
             k++;
             
             if (k < file_ch_num)
-                fprintf(f, "\"%s\": %s,\n", files_list[i] + off, files_content[i]);
+                fprintf(f, "\"%s\": \"%s\",\n", files_list[i] + off, files_content[i]);
             else 
-                fprintf(f, "\"%s\": %s\n", files_list[i] + off, files_content[i]);
+                fprintf(f, "\"%s\": \"%s\"\n", files_list[i] + off, files_content[i]);
         }
     }
 
@@ -138,37 +170,16 @@ void dfs(FILE *f,char *path, int off, int tabs, int virgul) {
 
 
 void js(char *file_name) {
-    FILE *f = fopen(file_name, "w");
+    FILE *f = fopen(file_name, "wb");
+	
     //fprintf(f, " \"asdsadsad\"\n");
-    dfs(f, "/", 0,0, 0);
+	
+    //dfs(f, "/", 0,0, 0);
+	
     fclose(f);
+	return -EPERM;
 }
-int pathfind(const char *path1, char *path2) {
-	//printf("pathfind fonk %s\n", path1);
-    int i1 = strlen(path1);
 
-    int i2 = strlen(path2);
-    if (i1 >= i2) return -1;
-    int i = 0;
-    int s = 0;
-    for (i = 0; i < i1; i++) {
-        if (path1[i] != path2[i]) return -1;
-    }
-    // printf("%s %s %c\n", path1,path2, path2[i1]);
-    if(strcmp(path1, "/") != 0 && path2[i1] != '/') return -1; 
-    
-    for (i = i1; i < i2; i++) {
-        if (path2[i] == '/') s++;
-        if (s > 1) return -1;
-        
-        
-    }
-	if (strcmp(path1, "/") == 0) {
-		if (s >= 1) return -1;
-        return 1;
-    }
-    return i1+1;
-}
 int isFile(const char* path) {
 	int check = -1;
 	int i=0;
@@ -294,10 +305,13 @@ static int json_read(const char *path, char *buf, size_t size, off_t offset,
 }
 static int json_unlink(const char *path) {
 	int i=0;
+	
 	for(i=0; i<curr_file_idx; i++) {
+		
 		if(strcmp(path, files_list[i]) == 0) {
-			memset(files_list[i], '\0', sizeof(files_list[i]));
-			js("example.json");
+			strcpy(files_list[i], "\0");
+			strcpy(files_content[i], "\0");
+			js("example2.json");
 			return 0; 
 		}
 	}
@@ -354,7 +368,7 @@ int main(int argc, char *argv[])
 	
 	
     free(data);
-    
+    //js("example2.json");
     return fuse_main(argc, argv, &json_oper, NULL);
 }
 

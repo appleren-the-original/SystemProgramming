@@ -51,7 +51,7 @@ void dfs(FILE *f,char *path, int off, int tabs, int virgul) {
         if (pathfind(path, dir_list[i])!= -1) child_num++;
     }
     //printf("%s %d\n", path, child_num);
-    for (i = 0; i < tabs; i++) fprintf(f, "\t");
+    for (i = 0; i < tabs; i++) fprintf(f, "    ");
     if (strcmp(path, "/") == 0) fprintf(f,"{\n");
     else fprintf(f,"\"%s\": {\n", path+off);
 
@@ -73,7 +73,7 @@ void dfs(FILE *f,char *path, int off, int tabs, int virgul) {
     for (i = 0; i < curr_file_idx; i++) {
         int off = 0;
         if ((off=pathfind(path, files_list[i])) != -1) {
-            for (int j = 0; j < tabs+1; j++) fprintf(f,"\t");
+            for (int j = 0; j < tabs+1; j++) fprintf(f,"    ");
             k++;
             
             if (k < file_ch_num)
