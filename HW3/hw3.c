@@ -13,6 +13,8 @@ static const char* rofsVersion = "2008.09.24";
 char dir_list[ 256 ][ 256 ];
 int curr_dir_idx = 0;
 
+
+
 char files_list[ 256 ][ 256 ];
 int curr_file_idx = 0;
 
@@ -20,10 +22,16 @@ char files_content[ 256 ][ 256 ];
 int curr_file_content_idx = 0;
 char path[256];
 
+static const char *hello_str = "Hello World!\n";
+static const char *hello_path = "/hello/hello";
+static const char *hello_path_fol = "/hello";
 void parse_array(cJSON *arrayItem)
 {
 	if(!arrayItem)
 		return;
+	char temp_dir_list[ 256 ][ 256 ];
+	int temp_curr_dir_idx = 0;
+	
 	while(arrayItem) {
 		if(arrayItem->next) {
 			if(!arrayItem->next->child) {
@@ -33,21 +41,37 @@ void parse_array(cJSON *arrayItem)
 			}
 		} else if (arrayItem->child && arrayItem->child->child) {
 			if(arrayItem->string) {
-				
-				strncat(path, arrayItem->string, strlen(arrayItem->string));
 				strncat(path, "/", 1);
+				strncat(path, arrayItem->string, strlen(arrayItem->string));
+				strcpy(temp_dir_list[temp_curr_dir_idx++], path);
 			}
 			arrayItem = arrayItem->child;
 		} else if(arrayItem->child && arrayItem->child->valuestring) {
 			cJSON *values = arrayItem->child;
-			
-			strncat(path, arrayItem->string, strlen(arrayItem->string));
 			strncat(path, "/", 1);
+			strncat(path, arrayItem->string, strlen(arrayItem->string));
+			strcpy(temp_dir_list[temp_curr_dir_idx++], path);
+			int oneTime = 0;
 			while(values) {
-				strcpy(dir_list[curr_dir_idx], path);
-				strncat(dir_list[curr_dir_idx++], values->string, strlen(values->string));
+				int i=0;
+				int j=0; 
+				for(i=0; i<temp_curr_dir_idx; i++) {
+					for(j=0; j<curr_dir_idx; j++) {
+						if (strcmp(temp_dir_list[i], dir_list[j]) == 0) {
+							//printf("temp_dir_list: %s \n", temp_dir_list[i]);
+							oneTime = 1;
+							break;
+						} 
+					}
+				if(oneTime == 0) {
+					strcpy(dir_list[curr_dir_idx++],temp_dir_list[i]);
+				} 
+				oneTime = 0;	
+				}
+				strcpy(files_list[curr_file_idx], path);
+				strncat(files_list[curr_file_idx], "/", 1);
+				strncat(files_list[curr_file_idx++], values->string, strlen(values->string));
 				
-				strcpy(files_list[curr_file_idx++], values->string);
 				strcpy(files_content[curr_file_content_idx++], values->valuestring);
 				
 				values = values->next;
@@ -62,28 +86,36 @@ void parse_array(cJSON *arrayItem)
 	memset(path, '\0', sizeof(path));
 }
 
-int isFile(const char *path) {
-	printf("isFile: %s\n", path);
-	path++;
-	
+int isFile(const char* path) {
+	int check = -1;
 	int i=0;
-    for(i=0; i<curr_file_idx; i++) { 
-		if (strcmp(path, files_list[i]) == 0) {
-			printf("isFile i: %d\n", i);
-			return i;
-			}
+	for(i=0; i<curr_file_idx; i++) {
+		if(strcmp(path,files_list[i]) == 0) {
+			check = i;
+		}
 	}
-	printf("isFile i: %d\n", -1);
-	return -1;
+	return check;
+	
+}
+
+int isDir(const char* path) {
+	
+	int check = -1;
+	int i=0;
+	for(i=0; i<curr_dir_idx; i++) {
+		if(strcmp(path,dir_list[i]) == 0) {
+			check = 1;
+		}
+	}
+	return check;
 }
 
 static int json_getattr(const char *path, struct stat *stbuf)
 {
-	printf("getattr: %s \n", path);
     int res = 0;
 
     memset(stbuf, 0, sizeof(struct stat));
-    if (strcmp(path, "/") == 0) {
+    if (strcmp(path, "/") == 0 || isDir(path) != -1) {
         stbuf->st_mode = S_IFDIR | 0755;
         stbuf->st_nlink = 2;
     }
@@ -91,8 +123,7 @@ static int json_getattr(const char *path, struct stat *stbuf)
 		
         stbuf->st_mode = S_IFREG | 0444;
         stbuf->st_nlink = 1;
-        printf("getattr: %s\n", files_content[isFile(path)]);
-        stbuf->st_size = strlen(files_content[isFile(path)]); 
+        stbuf->st_size = strlen(files_content[isFile(path)]);
     }
     else
         res = -ENOENT;
@@ -100,45 +131,37 @@ static int json_getattr(const char *path, struct stat *stbuf)
     return res;
 }
 
-
 static int json_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
                          off_t offset, struct fuse_file_info *fi)
 {
-	printf("readdir attr: %s\n", path);
     (void) offset;
     (void) fi;
 
-    //if (strcmp(path, "/") != 0)
-        //return -ENOENT;
-	
-    filler(buf, ".", NULL, 0);
-    filler(buf, "..", NULL, 0);
-    
-		int i=0;
-		for(i=0; i<curr_dir_idx; i++) { 
-			filler(buf, dir_list[i], NULL, 0);
+    if (strcmp(path, "/") != 0 && isFile(path) != -1)
+        return -ENOENT;
+    if(strcmp(path, "/") == 0) {
+        filler(buf, ".", NULL, 0);
+        filler(buf, "..", NULL, 0);
+        int i=0;
+		for(i=0; i<curr_dir_idx; i++) {
+			filler(buf, dir_list[i] + 1, NULL, 0);
 		}
-		for(i=0; i<curr_dir_idx; i++) { 
-			filler(buf, files_list[i], NULL, 0);
+    }
+    else{
+        filler(buf, ".", NULL, 0);
+        filler(buf, "..", NULL, 0);
+        int i=0;
+		for(i=0; i<curr_file_idx; i++) {
+			filler(buf, files_list[i]+1, NULL, 0);
 		}
-	
-
+    }
     return 0;
 }
 
-
 static int json_open(const char *path, struct fuse_file_info *fi)
 {
-	printf("json_open attr: %s\n", path);
-	int check = -1;
-	int i=0;
-    for(i=0; i<curr_dir_idx; i++) { 
-		if (strcmp(path, dir_list[i]) == 0)
-			check = 1;
-	}
-	
-	if(check != -1)
-		return -ENOENT;
+    if (isDir(path) != -1)
+        return -EPERM;
 
     if ((fi->flags & 3) != O_RDONLY)
         return -EACCES;
@@ -149,25 +172,16 @@ static int json_open(const char *path, struct fuse_file_info *fi)
 static int json_read(const char *path, char *buf, size_t size, off_t offset,
                       struct fuse_file_info *fi)
 {
-	
-    printf("jjson_read attr %s:\n", path);
     size_t len;
     (void) fi;
-    int check = -1;
-    int i=0;
-    for(i=0; i<curr_dir_idx; i++) { 
-		if (strcmp(path, dir_list[i]) == 0)
-			check = i;
-	}
-	
-	if(check == -1)
-		return -ENOENT;
+    if (isDir(path) != -1)
+        return -ENOENT;
 
-    len = strlen(files_content[check]);
+    len = strlen(files_content[isFile(path)]);
     if (offset < len) {
         if (offset + size > len)
             size = len - offset;
-        memcpy(buf, files_content[check] + offset, size);
+        memcpy(buf, files_content[isFile(path)] + offset, size);
     } else
         size = 0;
 
@@ -177,9 +191,10 @@ static int json_read(const char *path, char *buf, size_t size, off_t offset,
 static struct fuse_operations json_oper = {
     .getattr	= json_getattr,
     .readdir	= json_readdir,
-    .open	= json_open,
-    .read	= json_read,
+    .open		= json_open,
+    .read		= json_read,
 };
+
 int main(int argc, char *argv[])
 {
 	FILE *f = NULL;
@@ -205,13 +220,19 @@ int main(int argc, char *argv[])
 	while(json->child) {
 		parse_array(json);
 	}
-    
+    /*
     i = 0;
 	for(i=0; i<curr_dir_idx; i++) {
 		printf("dir: %s \n", dir_list[i]);
-		printf("files_name: %s \n", files_list[i]);
-		printf("files_content: %s \n\n", files_content[i]);
 	}
+	
+	i = 0;
+	for(i=0; i<curr_file_idx; i++) {
+		printf("files_list: %s \n", files_list[i]);
+		printf("files_content: %s \n", files_content[i]);
+	}
+	*/
+	
     free(data);
     
     return fuse_main(argc, argv, &json_oper, NULL);

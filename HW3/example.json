@@ -1,5 +1,5 @@
 {
-    "/class": {
+    "class": {
         "operatingsystem": {
             "students": {
                 "student1":"111111111",
@@ -19,7 +19,7 @@
             }
         }
     },
-    "/club": {
+    "club": {
         "basketball": {
             "students": {
                 "student1":"111111111"
