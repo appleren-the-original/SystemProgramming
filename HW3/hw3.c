@@ -96,18 +96,21 @@ int pathfind(const char *path1, char *path2) {
     for (i = 0; i < i1; i++) {
         if (path1[i] != path2[i]) return -1;
     }
+    // printf("%s %s %c\n", path1,path2, path2[i1]);
+    if(strcmp(path1, "/") != 0 && path2[i1] != '/') return -1; 
+    
     for (i = i1; i < i2; i++) {
         if (path2[i] == '/') s++;
         if (s > 1) return -1;
+        
         
     }
 	if (strcmp(path1, "/") == 0) {
 		if (s >= 1) return -1;
         return 1;
     }
-    return i1 + 1;
+    return i1+1;
 }
-
 int isFile(const char* path) {
 	int check = -1;
 	int i=0;
