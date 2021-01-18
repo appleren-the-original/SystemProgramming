@@ -25,6 +25,10 @@ char path[256];
 static const char *hello_str = "Hello World!\n";
 static const char *hello_path = "/hello/hello";
 static const char *hello_path_fol = "/hello";
+
+
+
+
 void parse_array(cJSON *arrayItem)
 {
 	if(!arrayItem)
