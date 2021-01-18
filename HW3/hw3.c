@@ -169,15 +169,14 @@ void dfs(FILE *f,const char *path, int off, int tabs, int virgul) {
 }
 
 
-void js(char *file_name) {
-    FILE *f = fopen(file_name, "wb");
+int js(const char *file_name) {
+    FILE *forsa;
+	forsa = fopen(file_name, "w");
 	
-    //fprintf(f, " \"asdsadsad\"\n");
+    dfs(forsa, "/", 0,0, 0);
 	
-    //dfs(f, "/", 0,0, 0);
-	
-    fclose(f);
-	return -EPERM;
+    fclose(forsa);
+	return 0;
 }
 
 int isFile(const char* path) {
@@ -288,8 +287,11 @@ static int json_open(const char *path, struct fuse_file_info *fi)
 static int json_read(const char *path, char *buf, size_t size, off_t offset,
                       struct fuse_file_info *fi)
 {
+	//js("example2.json");
     size_t len;
     (void) fi;
+
+	
     if (isDir(path) != -1)
         return -ENOENT;
 
@@ -311,7 +313,7 @@ static int json_unlink(const char *path) {
 		if(strcmp(path, files_list[i]) == 0) {
 			strcpy(files_list[i], "\0");
 			strcpy(files_content[i], "\0");
-			js("example2.json");
+			js("/home/yusuf/Desktop/s/SystemProgramming/HW3/example.json");
 			return 0; 
 		}
 	}
