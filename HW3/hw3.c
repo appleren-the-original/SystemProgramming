@@ -180,6 +180,7 @@ int js(const char *file_name) {
     FILE *forsa;
 	forsa = fopen(file_name, "w");
 	
+	memset(visits, 0, 256);
     dfs(forsa, "/", 0,0, 0);
 	
     fclose(forsa);
@@ -320,7 +321,7 @@ static int json_unlink(const char *path) {
 		if(strcmp(path, files_list[i]) == 0) {
 			strcpy(files_list[i], "\0");
 			strcpy(files_content[i], "\0");
-			js("/home/yusuf/Desktop/s/SystemProgramming/HW3/example.json");
+			js("/home/appleren/Desktop/SystemProgramming/HW3/example.json");
 			return 0; 
 		}
 	}

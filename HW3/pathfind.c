@@ -38,7 +38,7 @@ int main() {
     char *path3 = "/club";
     char *path4 = "/class/teacher";
     char *path5 = "/club/teacher";
-    printf("path1, path2: %d\n", pathfind(path1, path2));
+    printf("path1, path2: %d\n", pathfind(path2, path4));
     printf("path1, path3: %d\n", pathfind(path1, path3));
     printf("path1, path4: %d\n", pathfind(path1, path4));
     printf("path1, path5: %d\n", pathfind(path1, path5));
