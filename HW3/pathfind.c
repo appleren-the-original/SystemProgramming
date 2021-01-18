@@ -23,16 +23,23 @@ int pathfind(char *path1, char *path2) {
         if (s > 1) return -1;
         
     }
-    return i1;
+    if (path1 == "/") 
+    {   
+        if (s >= 1) return -1;
+        return 1;
+    }
+    return i1 + 1;
 }
 
 
 int main() {
-    char *path1 = "/class";
-    char *path2 = "/class/teacher";
-    char *path3 = "/class/teacher/student";
+    char *path1 = "/";
+    char *path2 = "/class";
+    char *path3 = "/club";
+    char *path4 = "/class/teacher";
+    char *path5 = "/club/teacher";
     printf("path1, path2: %d\n", pathfind(path1, path2));
-    printf("path2, path3: %d\n", pathfind(path2, path3));
     printf("path1, path3: %d\n", pathfind(path1, path3));
-    printf("path3, path2: %d\n", pathfind(path3, path2));
+    printf("path1, path4: %d\n", pathfind(path1, path4));
+    printf("path1, path5: %d\n", pathfind(path1, path5));
 }   
