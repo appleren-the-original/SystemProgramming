@@ -1,1 +1,13 @@
- "asdsadsad"
+{
+	"class": {
+		"teacher": {
+			"student": {
+				"student1": 1111
+			}
+		},
+		"mudur": {
+			"teacher": {
+			}
+		}
+	}
+}

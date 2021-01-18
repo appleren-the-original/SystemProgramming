@@ -42,7 +42,7 @@ int curr_file_idx = 0;
 char files_content[ 256 ][ 256 ];
 
 
-void dfs(char *path, int off, int tabs, int virgul) {
+void dfs(FILE *f,char *path, int off, int tabs, int virgul) {
     int i = 0;
     int child_num = 0;
     int k = 0;
@@ -51,9 +51,9 @@ void dfs(char *path, int off, int tabs, int virgul) {
         if (pathfind(path, dir_list[i])!= -1) child_num++;
     }
     //printf("%s %d\n", path, child_num);
-    for (i = 0; i < tabs; i++) printf("\t");
-    if (strcmp(path, "/") == 0) printf("{\n");
-    else printf("\"%s\": {\n", path+off);
+    for (i = 0; i < tabs; i++) fprintf(f, "\t");
+    if (strcmp(path, "/") == 0) fprintf(f,"{\n");
+    else fprintf(f,"\"%s\": {\n", path+off);
 
     for (i = 0; i < curr_dir_idx; i++) {
         if (strcmp(path, dir_list[i]) == 0) continue;
@@ -62,7 +62,7 @@ void dfs(char *path, int off, int tabs, int virgul) {
             k++;
             if (k < child_num) v = 1;
             else v = 0;
-            dfs(dir_list[i], off, tabs+1, v);
+            dfs(f,dir_list[i], off, tabs+1, v);
         }
     }
     int file_ch_num = 0;
@@ -73,27 +73,28 @@ void dfs(char *path, int off, int tabs, int virgul) {
     for (i = 0; i < curr_file_idx; i++) {
         int off = 0;
         if ((off=pathfind(path, files_list[i])) != -1) {
-            for (int j = 0; j < tabs+1; j++) printf("\t");
+            for (int j = 0; j < tabs+1; j++) fprintf(f,"\t");
             k++;
             
             if (k < file_ch_num)
-                printf("\"%s\": %s,\n", files_list[i] + off, files_content[i]);
+                fprintf(f, "\"%s\": %s,\n", files_list[i] + off, files_content[i]);
             else 
-                printf("\"%s\": %s\n", files_list[i] + off, files_content[i]);
+                fprintf(f, "\"%s\": %s\n", files_list[i] + off, files_content[i]);
         }
     }
 
 
-    for (i = 0; i < tabs; i++) printf("\t");
+    for (i = 0; i < tabs; i++) fprintf(f, "\t");
     if(virgul)
-    printf("},\n");
-    else printf("}\n");
+    fprintf(f,"},\n");
+    else fprintf(f,"}\n");
 }
 
 
 void js(char *file_name) {
     FILE *f = fopen(file_name, "w");
-    fprintf(f, " \"asdsadsad\"\n");
+    //fprintf(f, " \"asdsadsad\"\n");
+    dfs(f, "/", 0,0, 0);
     fclose(f);
 }
 
@@ -123,7 +124,8 @@ int main() {
     curr_file_idx = 2;
     
     char data2[1000];
-    dfs("/", 0, 0, 0);
+    js("example2.json");
+    //dfs("/", 0, 0, 0);
     
     
     
