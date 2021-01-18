@@ -25,10 +25,6 @@ char path[256];
 static const char *hello_str = "Hello World!\n";
 static const char *hello_path = "/hello/hello";
 static const char *hello_path_fol = "/hello";
-
-
-
-
 void parse_array(cJSON *arrayItem)
 {
 	if(!arrayItem)
@@ -89,6 +85,22 @@ void parse_array(cJSON *arrayItem)
 	}	
 	memset(path, '\0', sizeof(path));
 }
+int pathfind(const char *path1, char *path2) {
+    int i1 = strlen(path1);
+    int i2 = strlen(path2);
+    if (i1 >= i2) return -1;
+    int i = 0;
+    int s = 0;
+    for (i = 0; i < i1; i++) {
+        if (path1[i] != path2[i]) return -1;
+    }
+    for (i = i1; i < i2; i++) {
+        if (path2[i] == '/') s++;
+        if (s > 1) return -1;
+        
+    }
+    return i1;
+}
 
 int isFile(const char* path) {
 	int check = -1;
@@ -148,7 +160,12 @@ static int json_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
         filler(buf, "..", NULL, 0);
         int i=0;
 		for(i=0; i<curr_dir_idx; i++) {
-			filler(buf, dir_list[i] + 1, NULL, 0);
+			int off = pathfind(path, dir_list[i]);
+			if(off != -1) {
+				filler(buf, dir_list[i] + off, NULL, 0);
+			} else {
+				filler(buf, dir_list[i] + 1, NULL, 0);
+			}
 		}
     }
     else{
@@ -156,7 +173,9 @@ static int json_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
         filler(buf, "..", NULL, 0);
         int i=0;
 		for(i=0; i<curr_file_idx; i++) {
-			filler(buf, files_list[i]+1, NULL, 0);
+			if(strcmp(path, files_list[i]) == 0) { 
+				filler(buf, files_list[i+1]+1, NULL, 0);
+			}
 		}
     }
     return 0;
@@ -191,6 +210,7 @@ static int json_read(const char *path, char *buf, size_t size, off_t offset,
 
     return size;
 }
+
 
 static struct fuse_operations json_oper = {
     .getattr	= json_getattr,
